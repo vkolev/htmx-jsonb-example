@@ -1,0 +1,69 @@
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Notes</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" >
+    <script src="https://unpkg.com/htmx.org@2.0.1"></script>
+    <style>
+        .danger {
+            --pico-background-color: rgb(217, 53, 38);
+            --pico-color: white;
+        }
+        .danger:hover {
+            --pico-background-color: rgb(240, 96, 72);
+        }
+    </style>
+</head>
+<body>
+
+<main class="container">
+    <h1>Notes</h1>
+    <nav>
+        <a href="/">Home</a>
+        <a href="" hx-get="/en" hx-swap="innerHTML" hx-target="#all-notes">[en]</a>
+        <a href="" hx-get="/de" hx-swap="innerHTML" hx-target="#all-notes">[de]</a>
+        <a href="" hx-get="/bg" hx-swap="innerHTML" hx-target="#all-notes">[bg]</a>
+    </nav>
+
+    <section th:fragment="all-notes" id="all-notes" class="notes">
+        <div th:if="${lang != null}" th:fragment="search-notes" class="search-notes">
+            <input type="text"
+                   placeholder="Search notes..."
+                   name="q"
+                   th:value="${query}"
+                   th:hx-get="|/${lang}/search|"
+                   hx-trigger="keyup changed delay:500ms"
+                   hx-target="#all-notes" />
+        </div>
+        <div th:fragment="all-results" id="all-results">
+            <div th:if="${lang != null}" class="grid" th:each="note : ${notes}">
+                <article>
+                    <header th:text="${note.title}"></header>
+                    <p th:text="${note.translations.get(lang)}"></p>
+                    <footer>
+                        <button class="danger" th:hx-delete="|/${note.id}|" hx-confirm="Are you sure to delete this note?" hx-swap="outerHTML" hx-target="closest article">Delete</button>
+                        <button class="secondary">Edit</button>
+                    </footer>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section th:fragment="add-new-note" class="create-note" hx-swap-oob="true">
+        <h2>Create Note</h2>
+        <input id="title" name="title" type="text" placeholder="Title" />
+        <div th:fragment="translate-note">
+            <input id="lang" name="lang" type="text" placeholder="Language" />
+            <textarea id="content" name="content" placeholder="Content"></textarea>
+            <hr />
+        </div>
+        <div id="translations"></div>
+    </section>
+    <button id="add-translation" class="button" hx-get="/add-translation" hx-target="#translations" hx-swap="beforeend">+</button>
+    <button id="save-note" class="button" hx-post="/create" hx-include=".create-note" hx-target="#all-notes" hx-swap="#all-notes">Save</button>
+</main>
+
+
+</body>
+</html>
